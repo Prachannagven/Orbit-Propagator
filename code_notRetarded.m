@@ -1,7 +1,7 @@
 %Constants
 constants.u = 3.986 * 10^14;
-constants.J2 = 1.082629*10^-2;
-constants.Re = 6378137;
+constants.J2 = 1.082629*10^-3;
+constants.Re = 6371837;
 constants.c = 299792458;
 constants.S_weirdthing = 1362;
 constants.R_diff = 0.2;
@@ -23,9 +23,9 @@ constants.C_D = 2.2; %default value of GMAT model
 
 %Why Bro, Why
 
-a = [0,0,0];
-v = [0,7560,0];
-x = 5e6;
+a = [0;0;0];
+v = [0;7560;0];
+x = 7e6;
 y = 0;
 z = 0;
 r = [x;y;z];
@@ -37,9 +37,11 @@ dt = 10;
 total_time = 1e5;
 
 %F = F_SRP()
+overall = [];
 
 for j = 1:dt:total_time
-    a_g = acc(r(1),r(2),r(3),constants);
+    [a_g, a_J2] = acc(r(1),r(2),r(3),constants);
+    overall = [overall [a_g; a_J2]];
     %a_drag = drag(rho(norm(r)), )
     %a_SRP = F_SRP()
     a = a_g;
@@ -57,14 +59,15 @@ function [A] = projArea(n1, n2, n3, v) %to get the area along the direction of m
     A = A1*(abs(dot(n1, v))) + A2*(abs(dot(n2, v))) + A3*(abs(dot(n3, v)));
 end
 
-function a = acc(x,y,z,constants) %to get the gravitational acceleration of the body over time
-    r = [x;y;z];
-    r_thing = sqrt(x^2+y^2+z^2);
-    %ax = ((constants.u*constants.J2*((constants.Re)^2))/2)*((15*x*z^2)/r^7 - (3*x/r^5));
-    %ay = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*y*z^2)/r^7 - (3*y/r^5));
-    %az = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*z^3)/r^7 - (9*z/r^5));
-
-    a = -(constants.G*constants.M_e/(r_thing^3))*r;
+function [a, a_j2] = acc(x,y,z,constants) %to get the gravitational acceleration of the body over time
+    r_thing = [x;y;z];
+    r = sqrt(x^2+y^2+z^2);
+    ax = ((constants.u*constants.J2*((constants.Re)^2))/2)*((15*x*z^2)/r^7 - (3*x/r^5));
+    ay = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*y*z^2)/r^7 - (3*y/r^5));
+    az = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*z^3)/r^7 - (9*z/r^5));
+    
+    a_j2 = [ax;ay;az];
+    a = -(constants.G*constants.M_e/(r^3))*r_thing;
 end
 
 function [rho] = rho(h) %to get the value of atmospheric density at differnet time
