@@ -7,6 +7,8 @@ constants.S_weirdthing = 1362;
 constants.R_diff = 0.2;
 constants.R_spec = 0.5;
 constants.R_abs = 0.3;
+constants.M_e = 5.972e24;
+constants.G = 6.672e-11;
 
 constants.altitude = 600000;
 constants.rho_0 = []; 
@@ -22,20 +24,31 @@ constants.C_D = 2.2; %default value of GMAT model
 %Why Bro, Why
 
 a = [0,0,0];
-v = [0,0,0];
-x = 500000;
-y = 400000;
-z = 50000;
-r = [x,y,z];
+v = [0,7560,0];
+x = 5e6;
+y = 0;
+z = 0;
+r = [x;y;z];
 mass = 10;
 
-dt = 0.01;
+pos = [r];
 
-x = getNormals();
-for i = 1:1:1000
-    a_g = acc(x,y,z,constants)
-    
+dt = 10;
+total_time = 1e5;
+
+%F = F_SRP()
+
+for j = 1:dt:total_time
+    a_g = acc(r(1),r(2),r(3),constants);
+    %a_drag = drag(rho(norm(r)), )
+    %a_SRP = F_SRP()
+    a = a_g;
+    v = v + a*dt;
+    r = r + v*dt;
+    pos = [pos r];
 end
+
+comet3(pos(1,:), pos(2,:), pos(3,:));
 
 %Functions 
 
@@ -45,16 +58,20 @@ function [A] = projArea(n1, n2, n3, v) %to get the area along the direction of m
 end
 
 function a = acc(x,y,z,constants) %to get the gravitational acceleration of the body over time
-    r = sqrt(x^2+y^2+z^2);
-    ax = ((constants.u*constants.J2*((constants.Re)^2))/2)*((15*x*z^2)/r^7 - (3*x/r^5));
-    ay = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*y*z^2)/r^7 - (3*y/r^5));
-    az = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*z^3)/r^7 - (9*z/r^5));
+    r = [x;y;z];
+    r_thing = sqrt(x^2+y^2+z^2);
+    %ax = ((constants.u*constants.J2*((constants.Re)^2))/2)*((15*x*z^2)/r^7 - (3*x/r^5));
+    %ay = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*y*z^2)/r^7 - (3*y/r^5));
+    %az = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*z^3)/r^7 - (9*z/r^5));
 
-    a = [ax,ay,az];
+    a = -(constants.G*constants.M_e/(r_thing^3))*r;
 end
 
 function [rho] = rho(h) %to get the value of atmospheric density at differnet time
     %add lookup functions for h_0, H and rho_0 and then solve
+    h_0 = 0;
+    H = 0;
+    rho_0 = 0
     rho = rho_0*exp(-((h-h_0)/H));
 end
 
@@ -66,7 +83,7 @@ end
 
 function [F_D] = drag(rho, n1, n2, n3, v) %getting drag force
     A = projArea(n1, n2, n3, v);
-    F_D = -((rho*v^2*C_D*A)/2)*(v ./ norm(v));
+    F_D = -((rho*(norm(v))^2*C_D*A)/2)*(v ./ norm(v));
 end
 
 function [JulianDate] = getJulian()
