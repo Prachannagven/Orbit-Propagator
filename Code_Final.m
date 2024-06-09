@@ -32,16 +32,16 @@ data_table = readtable("Drag_Constants.xlsx", Sheet="Sheet1");
 
 a = [0;0;0];
 v = [0;7560;0];
-x = 7e6;
+x = 0;
 y = 0;
-z = 0;
+z = 7e6;
 r = [x;y;z];
 mass = 10;
 
 pos = [r];
 
 dt = 10;
-total_time = 1e4;
+total_time = 7500;
 
 
 overall = [];
@@ -49,7 +49,7 @@ overall = [];
 for j = 1:dt:total_time
     [a_g, a_J2] = acc(r(1),r(2),r(3),constants);
     a_drag = drag(rho(norm(r), data_table), getNormals(), v, constants);
-    F_SRP = solarPressure(r(1), r(2), r(3), getTime(getJulian()), [[1;0;0], [0;1;0], [0;0;1]], constants);
+    F_SRP = solarPressure(r(1), r(2), r(3), getTime(getJulian()), getNormals(), constants);
     a_SRP = F_SRP / constants.M_s;
     a = a_g + a_J2 + a_drag + a_SRP;
     v = v + a*dt;
@@ -59,7 +59,10 @@ for j = 1:dt:total_time
     rho(norm(r), data_table)
 end
 
+
 comet3(pos(1,:), pos(2,:), pos(3,:));
+hold on
+comet3(0,0,0); %this is earth, earth says hi
 
 %Functions 
 
