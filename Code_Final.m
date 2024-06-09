@@ -41,14 +41,14 @@ mass = 10;
 pos = [r];
 
 dt = 10;
-total_time = 7.5e4;
+total_time = 1e4;
 
 
 overall = [];
 
 for j = 1:dt:total_time
     [a_g, a_J2] = acc(r(1),r(2),r(3),constants);
-    a_drag = drag(rho(norm(r), data_table), [[1;0;0], [0;1;0], [0;0;1]], v, constants);
+    a_drag = drag(rho(norm(r), data_table), getNormals(), v, constants);
     F_SRP = solarPressure(r(1), r(2), r(3), getTime(getJulian()), [[1;0;0], [0;1;0], [0;0;1]], constants);
     a_SRP = F_SRP / constants.M_s;
     a = a_g + a_J2 + a_drag + a_SRP;
@@ -109,11 +109,12 @@ function h_0 = lookup(h, table_pull)
     end
 end
 
-function [n1,n2,n3] = getNormals() %getting the nromals from the whtaevers as input (find out what whatever is)
+function normals = getNormals() %getting the nromals from the whtaevers as input (find out what whatever is)
     %for now just setting normals as constants and assuming the bodydoesn't rotate
     n1 = [1; 0; 0];
     n2 = [0; 1; 0];
     n3 = [0; 0; 1];
+    normals = [n1, n2, n3];
 end
 
 function [F_D] = drag(rho, normals, v, constants) %getting drag force
