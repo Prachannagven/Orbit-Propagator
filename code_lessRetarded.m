@@ -41,7 +41,7 @@ mass = 10;
 pos = [r];
 
 dt = 10;
-total_time = 1e5;
+total_time = 1e4;
 
 
 overall = [];
@@ -55,6 +55,8 @@ for j = 1:dt:total_time
     v = v + a*dt;
     r = r + v*dt;
     pos = [pos r];
+
+    rho(norm(r), data_table)
 end
 
 comet3(pos(1,:), pos(2,:), pos(3,:));
@@ -77,19 +79,34 @@ function [a, a_j2] = acc(x,y,z,constants) %to get the gravitational acceleration
     a = -(constants.G*constants.M_e/(r_mag^3))*r;
 end
 
-function [rho] = rho(h_0, table_pull) %to get the value of atmospheric density at differnet time
+function [rho] = rho(h, table_pull) %to get the value of atmospheric density at differnet time
     %getting individual double arrays so that we can use the interpolate function
     array_h0 = table2array([table_pull(:,1)]);
-    
     array_rho0 = table2array([table_pull(:,2)]);
     array_H = table2array([table_pull(:,3)]);
 
     %using the interp1 function in order to get the values of rho0 and H
+    h_0 = lookup(h, table_pull);
     H = interp1(array_h0, array_H, h_0);
     rho_0 = interp1(array_h0, array_rho0, h_0);
 
     %plugging in the values of rho0 and H so that we can get the value of rho
     rho = rho_0*exp(-((h-h_0)/H));
+end
+
+%lookup function because matlabs doesn't have a friggin lookup function like what we want
+function h_0 = lookup(h, table_pull)
+    for i = 1:1:36
+        h_0 = table2array([table_pull(i,1)]);
+        if h<h_0
+            if i == 1
+                h_0 = table2array([table_pull(i,1)]);
+            else
+                h_0 = table2array([table_pull(i-1,1)]);
+            end
+            break
+        end
+    end
 end
 
 function [n1,n2,n3] = getNormals() %getting the nromals from the whtaevers as input (find out what whatever is)
