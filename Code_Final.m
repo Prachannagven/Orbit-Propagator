@@ -1,3 +1,6 @@
+clc
+clear
+
 %Constants
 constants.u = 3.986 * 10^14;
 constants.J2 = 1.082629*10^-3;
@@ -22,6 +25,9 @@ constants.dist_to_sun = 150*10^6;
 
 constants.C_D = 2.2; %default value of GMAT model
 
+%extracting table data so that we can use it in the drag force
+data_table = readtable("Drag_Constants.xlsx", Sheet="Sheet1");
+
 %Why Bro, Why
 
 a = [0;0;0];
@@ -35,21 +41,22 @@ mass = 10;
 pos = [r];
 
 dt = 10;
-total_time = 1e5;
+total_time = 7.5e4;
 
 
 overall = [];
 
 for j = 1:dt:total_time
     [a_g, a_J2] = acc(r(1),r(2),r(3),constants);
-    overall = [overall [a_g; a_J2]];
-    a_drag = drag(rho(norm(r)), [[1;0;0], [0;1;0], [0;0;1]], v, constants);
+    a_drag = drag(rho(norm(r), data_table), [[1;0;0], [0;1;0], [0;0;1]], v, constants);
     F_SRP = solarPressure(r(1), r(2), r(3), getTime(getJulian()), [[1;0;0], [0;1;0], [0;0;1]], constants);
     a_SRP = F_SRP / constants.M_s;
     a = a_g + a_J2 + a_drag + a_SRP;
     v = v + a*dt;
     r = r + v*dt;
     pos = [pos r];
+
+    rho(norm(r), data_table)
 end
 
 comet3(pos(1,:), pos(2,:), pos(3,:));
@@ -62,25 +69,48 @@ function [A] = projArea(normals, v, constants) %to get the area along the direct
 end
 
 function [a, a_j2] = acc(x,y,z,constants) %to get the gravitational acceleration of the body over time
-    r_thing = [x;y;z];
-    r = sqrt(x^2+y^2+z^2);
-    ax = ((constants.u*constants.J2*((constants.Re)^2))/2)*((15*x*z^2)/r^7 - (3*x/r^5));
-    ay = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*y*z^2)/r^7 - (3*y/r^5));
-    az = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*z^3)/r^7 - (9*z/r^5));
+    r = [x;y;z];
+    r_mag = norm(r);
+    ax = ((constants.u*constants.J2*((constants.Re)^2))/2)*((15*x*z^2)/r_mag^7 - (3*x/r_mag^5));
+    ay = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*y*z^2)/r_mag^7 - (3*y/r_mag^5));
+    az = ((constants.u*constants.J2*(constants.Re^2))/2)*((15*z^3)/r_mag^7 - (9*z/r_mag^5));
     
     a_j2 = [ax;ay;az];
-    a = -(constants.G*constants.M_e/(r^3))*r_thing;
+    a = -(constants.G*constants.M_e/(r_mag^3))*r;
 end
 
-function [rho] = rho(h) %to get the value of atmospheric density at differnet time
-    %add lookup functions for h_0, H and rho_0 and then solve
-    h_0 = 600;
-    H = 600;
-    rho_0 = 1.454e-13;
+function [rho] = rho(h, table_pull) %to get the value of atmospheric density at differnet time
+    %getting individual double arrays so that we can use the interpolate function
+    array_h0 = table2array([table_pull(:,1)]);
+    array_rho0 = table2array([table_pull(:,2)]);
+    array_H = table2array([table_pull(:,3)]);
+
+    %using the interp1 function in order to get the values of rho0 and H
+    h_0 = lookup(h, table_pull);
+    H = interp1(array_h0, array_H, h_0);
+    rho_0 = interp1(array_h0, array_rho0, h_0);
+
+    %plugging in the values of rho0 and H so that we can get the value of rho
     rho = rho_0*exp(-((h-h_0)/H));
 end
 
+%lookup function because matlabs doesn't have a friggin lookup function like what we want
+function h_0 = lookup(h, table_pull)
+    for i = 1:1:36
+        h_0 = table2array([table_pull(i,1)]);
+        if h<h_0
+            if i == 1
+                h_0 = table2array([table_pull(i,1)]);
+            else
+                h_0 = table2array([table_pull(i-1,1)]);
+            end
+            break
+        end
+    end
+end
+
 function [n1,n2,n3] = getNormals() %getting the nromals from the whtaevers as input (find out what whatever is)
+    %for now just setting normals as constants and assuming the bodydoesn't rotate
     n1 = [1; 0; 0];
     n2 = [0; 1; 0];
     n3 = [0; 0; 1];
@@ -142,7 +172,6 @@ function [FSRP] = solarPressure(x, y, z, T, normals, constants)
     FSRP_face3 = -P_weirdthing*projArea3*(2*normals(3)*(constants.R_diff/3 + constants.R_spec*costheta3) + (1-constants.R_spec)*sat_sun_unit);
 
     FSRP = FSRP_face1 + FSRP_face2 +FSRP_face3;
-
 end
 
 
