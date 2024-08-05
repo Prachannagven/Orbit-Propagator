@@ -165,15 +165,15 @@ function [FSRP] = solarPressure(x, y, z, T, normals, constants)
     %now to calculate piece by piece
     costheta1 = abs(dot(normals(1:3,1), sat_sun_unit));
     projArea1 = constants.A1*costheta1;
-    FSRP_face1 = -P_weirdthing*projArea1*(2*normals(1)*(constants.R_diff/3 + constants.R_spec*costheta1) + (1-constants.R_spec)*sat_sun_unit);
+    FSRP_face1 = -P_weirdthing*projArea1*(2*normals(1:3,1)*(constants.R_diff/3 + constants.R_spec*costheta1) + (1-constants.R_spec)*sat_sun_unit);
 
     costheta2 = abs(dot(normals(1:3,2), sat_sun_unit));
     projArea2 = constants.A2*costheta2;
-    FSRP_face2 = -P_weirdthing*projArea2*(2*normals(2)*(constants.R_diff/3 + constants.R_spec*costheta2) + (1-constants.R_spec)*sat_sun_unit);
+    FSRP_face2 = -P_weirdthing*projArea2*(2*normals(1:3,2)*(constants.R_diff/3 + constants.R_spec*costheta2) + (1-constants.R_spec)*sat_sun_unit);
 
     costheta3 = abs(dot(normals(1:3,3), sat_sun_unit));
     projArea3 = constants.A3*costheta3;
-    FSRP_face3 = -P_weirdthing*projArea3*(2*normals(3)*(constants.R_diff/3 + constants.R_spec*costheta3) + (1-constants.R_spec)*sat_sun_unit);
+    FSRP_face3 = -P_weirdthing*projArea3*(2*normals(1:3,3)*(constants.R_diff/3 + constants.R_spec*costheta3) + (1-constants.R_spec)*sat_sun_unit);
 
     FSRP = FSRP_face1 + FSRP_face2 +FSRP_face3;
 end
