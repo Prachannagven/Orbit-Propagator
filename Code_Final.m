@@ -137,7 +137,7 @@ end
 function [FSRP] = solarPressure(x, y, z, T, normals, constants)
     
     r = [x; y; z]; %a prereq variable to simplify stuff
-    FSRP = 0;
+    FSRP = 0z;
 
     %calculating the constants we need to even actually get solar pressure
     phi = 280.460 + 36000.771*T; %mean longitude of sun
