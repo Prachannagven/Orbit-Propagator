@@ -40,8 +40,8 @@ mass = 10;
 
 pos = [r];
 
-dt = 10;
-total_time = 7500;
+dt = 100;
+total_time = 750000;
 
 
 overall = [];
@@ -137,7 +137,7 @@ end
 function [FSRP] = solarPressure(x, y, z, T, normals, constants)
     
     r = [x; y; z]; %a prereq variable to simplify stuff
-    FSRP = 0z;
+    FSRP = 0;
 
     %calculating the constants we need to even actually get solar pressure
     phi = 280.460 + 36000.771*T; %mean longitude of sun
@@ -148,7 +148,7 @@ function [FSRP] = solarPressure(x, y, z, T, normals, constants)
     %getting earth to sun vector
     earth_sun_unit = [cos(phi_ecl); cos(epsilon)*sin(phi_ecl); sin(epsilon)*sin(phi_ecl)];
 
-    sat_sun = constants.dist_to_sun*epsilon*earth_sun_unit - r;
+    sat_sun = constants.dist_to_sun*earth_sun_unit - r;
 
     sat_sun_unit = sat_sun ./ norm(sat_sun);
     r_unit = r ./ norm(r);
